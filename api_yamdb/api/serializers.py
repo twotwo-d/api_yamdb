@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 
-from api.models import Category, Genre, Title
+from reviews.models import Category, Genre, Review, Title
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -46,3 +46,29 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'year', 'description', 'genre', 'category',
         )
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор отзывов"""
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+    )
+
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('author', 'title'),
+                message='Вы уже добавляли отзыв на это произведение'
+            )
+        ]
+
+    def validate_score(self, value):
+        if 0 > value > 10:
+            raise serializers.ValidationError(
+                'Оценка должна быть в диапазоне от 1 до 10'
+            )
+        return value
