@@ -1,13 +1,14 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 
+"""Согласно ТЗ опишем возможные роли пользователей"""
 
 ANONYM = 'anonym'
 USER = 'user'
 MODERATOR = 'moderator'
 ADMIN = 'admin'
 
-ROLES = [
+ROLE_CHOICES = [
         (ANONYM, 'anonym'),
         (USER, 'user'),
         (MODERATOR, 'moderator'),
@@ -16,8 +17,7 @@ ROLES = [
 
 
 class User(AbstractUser):
-    """Create the model User for adding new users
-    and fixing useres roles"""
+    """Создали модель Пользователь и указали роли в ROLE_CHOICES"""
 
     username = models.TextField(
         verbose_name='Имя пользователя',
@@ -27,26 +27,51 @@ class User(AbstractUser):
     email = models.EmailField(
         verbose_name='Электронная почта',
         max_length=254,
+        blank=True,
         unique=True,
     )
     bio = models.TextField(
         verbose_name='Биография',
         blank=True,
+        null=True,
     )
-    # role = models.CharField(
-    #    verbose_name='роль пользователя',
-    #    max_length=10,
-    #    choices=ROLES,
-    #    default='user',
-    # )
-    # confirmation_code = models.CharField(
-    #    verbose_name='Код подтверждения',
-    # )
+    role = models.CharField(
+        verbose_name='Роль',
+        max_length=100,
+        choices=ROLE_CHOICES,
+        default='user',
+     )
+    confirmation_code = models.CharField(
+        verbose_name='Код подтверждения',
+        max_length=150,
+        editable=False,
+        null=True,
+        blank=True,
+        unique=True
+    )
+
+    @property
+    def is_user(self):
+        """Проверим наличие прав у пользователя"""
+        return self.role == self.USER
+
+    @property
+    def is_admin(self):
+        """Проверим наличие прав у администратора"""
+        return any(
+            [self.role == ADMIN, self.is_superuser, self.is_staff]
+        )
+
+    @property
+    def is_moderator(self):
+        """Проверим наличие прав у модератора"""
+        return self.role == MODERATOR
 
 
 class Meta:
     verbose_name_plural = 'Пользователи'
     verbose_name = 'Пользователь'
+    ordering = ('username',)
 
     def __str__(self):
         return self.username
