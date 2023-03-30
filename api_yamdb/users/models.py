@@ -22,7 +22,7 @@ class User(AbstractUser):
     username = models.TextField(
         verbose_name='Имя пользователя',
         unique=True,
-        max_length=254,
+        max_length=150,
     )
     email = models.EmailField(
         verbose_name='Электронная почта',
@@ -40,14 +40,14 @@ class User(AbstractUser):
         max_length=100,
         choices=ROLE_CHOICES,
         default='user',
-     )
+    )
     confirmation_code = models.CharField(
         verbose_name='Код подтверждения',
         max_length=150,
         editable=False,
         null=True,
         blank=True,
-        unique=True
+        unique=False
     )
 
     @property
