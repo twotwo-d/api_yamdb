@@ -161,3 +161,11 @@ class Comment(models.Model):
         verbose_name='Дата публикации',
         db_index=True,
     )
+
+    class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return f'{self.review} - {self.author}'
