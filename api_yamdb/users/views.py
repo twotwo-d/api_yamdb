@@ -1,8 +1,10 @@
+from smtplib import SMTPResponseException
+
+from api.permissions import IsAdminUser
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -11,8 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 from .serializers import (AccessTokenSerializer, CreatUserSerializer,
-                          UserSerializer,)
-from api.permissions import IsAdminUser
+                          UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -22,6 +23,8 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [IsAdminUser]
     lookup_field = 'username'
+    search_fields = ['username']
+    http_method_names = ['get', 'patch', 'post', 'delete',]
 
     @action(
             methods=['patch', 'get'],
