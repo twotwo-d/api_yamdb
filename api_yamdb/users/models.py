@@ -22,7 +22,7 @@ class User(AbstractUser):
     username = models.TextField(
         verbose_name='Имя пользователя',
         unique=True,
-        max_length=254,
+        max_length=150,
     )
     email = models.EmailField(
         verbose_name='Электронная почта',
