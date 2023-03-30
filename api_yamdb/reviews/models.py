@@ -136,3 +136,28 @@ class Review(models.Model):
 
     def __str__(self):
         return f'{self.title} - {self.author}'
+
+
+class Comment(models.Model):
+    """Комментарии к отзывам"""
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Отзыв',
+    )
+    text = models.TextField(
+        verbose_name='Текст комментария',
+        max_length=150,
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Автор комментария',
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата публикации',
+        db_index=True,
+    )

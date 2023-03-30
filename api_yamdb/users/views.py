@@ -2,12 +2,14 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import ValidationError
 
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 from .models import User
 from .serializers import (AccessTokenSerializer, CreatUserSerializer,
@@ -54,7 +56,9 @@ def signup(request):
         User.objects.filter(email=email).exists()
         or User.objects.filter(username=username).exists()
     ):
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        raise ValidationError(
+            'Пользователь с таким e-mail или username уже существует'
+        )
     user, code_created = User.objects.get_or_create(
         email=email, username=username)
     confirmation_code = default_token_generator.make_token(user)
@@ -73,6 +77,7 @@ def signup(request):
     )
 
 
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_jwt_token(request):
@@ -80,19 +85,28 @@ def get_jwt_token(request):
 
     serializer = AccessTokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user = get_object_or_404(
-        User,
-        username=serializer.validated_data.get('username')
-    )
+    username = serializer.validated_data.get('username')
     confirmation_code = serializer.validated_data.get('confirmation_code')
-    token = default_token_generator.check_token(user, confirmation_code)
 
-    if token == serializer.validated_data.get('confirmation_code'):
-        jwt_token = RefreshToken.for_user(user)
+    try:
+        user = User.objects.get(username=username, confirmation_code=confirmation_code)
+    except User.DoesNotExist:
         return Response(
-            {'token': f'{jwt_token}'}, status=status.HTTP_200_OK
+            {'message': 'Ваш токен не прошёл проверку'},
+            status=status.HTTP_400_BAD_REQUEST
         )
+
+    user.confirmation_code = ''
+    user.save()
+    try:
+        jwt_token = RefreshToken.for_user(user)
+    except TokenError as e:
+        return Response(
+            {'message': f'Ошибка при создании токена: {e}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
     return Response(
-        {'message': 'Ваш токен не прошёл проверку'},
-        status=status.HTTP_400_BAD_REQUEST
+        {'token': f'{jwt_token.access_token}'},
+        status=status.HTTP_200_OK
     )
