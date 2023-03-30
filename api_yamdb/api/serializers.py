@@ -8,32 +8,32 @@ class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор жанров"""
     slug = serializers.CharField(
         allow_blank=False,
+        max_length=50,
         validators=[UniqueValidator(
-            max_length=50,
             queryset=Genre.objects.all(),
             message='Такой идентификатор уже существует'
         )]
     )
 
     class Meta:
-        fields = ('name', 'slug')
         model = Genre
+        fields = ('name', 'slug')
 
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор категорий"""
     slug = serializers.CharField(
         allow_blank=False,
+        max_length=50,
         validators=[UniqueValidator(
-            max_length=50,
             queryset=Category.objects.all(),
             message='Такой идентификатор уже существует'
         )]
     )
 
     class Meta:
-        fields = ('name', 'slug')
         model = Category
+        fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):

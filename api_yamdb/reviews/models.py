@@ -2,6 +2,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from users.models import User
+from .validators import year_validator
 
 
 class Genre(models.Model):
@@ -56,8 +57,8 @@ class Title(models.Model):
         verbose_name='Название произведения',
         help_text='Укажите название произведения'
     )
-    # Делать валидацию только для годов от Р.Х.?
     year = models.IntegerField(
+        validators=[year_validator],
         verbose_name='Год выхода',
         help_text='Укажите год выхода произведения'
     )
