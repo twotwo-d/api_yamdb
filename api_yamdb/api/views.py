@@ -1,15 +1,12 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, permissions, viewsets
+from reviews.models import Category, Genre, Review, Title
 
 from .filters import TitleFilter
-from reviews.models import Category, Genre, Title, Review
-from .permissions import (IsAdminUserOrReadOnly,
-                          IsAdminModeratorAuthorOrReadOnly)
-from .serializers import (CategorySerializer,
-                          CommentSerializer,
-                          GenreSerializer,
-                          ReviewSerializer,
-                          TitleSerializer)
+from .permissions import (IsAdminModeratorAuthorOrReadOnly,
+                          IsAdminUserOrReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, TitleSerializer)
 
 
 class CreateDeleteListViewSet(mixins.CreateModelMixin,
@@ -41,7 +38,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Получить список произведений"""
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (IsAdminUserOrReadOnly,)
     filterset_class = TitleFilter
 
 

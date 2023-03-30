@@ -1,20 +1,18 @@
+from api.permissions import IsAdminUser
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import ValidationError
-
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 from .serializers import (AccessTokenSerializer, CreatUserSerializer,
-                          UserSerializer,)
-from api.permissions import IsAdminUser
+                          UserSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -24,6 +22,8 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [IsAdminUser]
     lookup_field = 'username'
+    seach_fields = ['username']
+    http_method_names = ['post', 'patch', 'get', 'delete',]
 
     @action(
             methods=['patch', 'get'],
@@ -77,7 +77,6 @@ def signup(request):
     )
 
 
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_jwt_token(request):
@@ -89,7 +88,10 @@ def get_jwt_token(request):
     confirmation_code = serializer.validated_data.get('confirmation_code')
 
     try:
-        user = User.objects.get(username=username, confirmation_code=confirmation_code)
+        user = User.objects.get(
+            username=username,
+            confirmation_code=confirmation_code,
+        )
     except User.DoesNotExist:
         return Response(
             {'message': 'Ваш токен не прошёл проверку'},
