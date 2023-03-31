@@ -1,12 +1,15 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, permissions, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, viewsets
+from rest_framework.pagination import (LimitOffsetPagination)
 from reviews.models import Category, Genre, Review, Title
 
 from .filters import TitleFilter
 from .permissions import (IsAdminModeratorAuthorOrReadOnly,
                           IsAdminUserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer, TitleSerializer)
+                          GenreSerializer, ReviewSerializer,
+                          TitleViewSerializer, TitleSerializer)
 
 
 class CreateDeleteListViewSet(mixins.CreateModelMixin,
@@ -20,26 +23,34 @@ class CategoryViewSet(CreateDeleteListViewSet):
     """Получить список категорий произведений"""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsAdminUserOrReadOnly,)
+    lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    permission_classes = (IsAdminUserOrReadOnly,)
+    pagination_class = LimitOffsetPagination
 
 
 class GenreViewSet(CreateDeleteListViewSet):
     """Получить список жанров произведений"""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsAdminUserOrReadOnly,)
+    lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    permission_classes = (IsAdminUserOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Получить список произведений"""
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = (IsAdminUserOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH',):
+            return TitleSerializer
+        return TitleViewSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
