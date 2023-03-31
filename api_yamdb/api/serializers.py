@@ -37,7 +37,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания заголовков"""
+    """Сериализатор заголовков"""
     genre = serializers.SlugRelatedField(
         many=True,
         queryset=Genre.objects.all(),
@@ -50,12 +50,16 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug',
         required=True
     )
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'description', 'genre', 'category',
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
+
+    def get_rating(self, obj):
+        return obj.calc_rating()
 
 
 class TitleViewSerializer(serializers.ModelSerializer):
