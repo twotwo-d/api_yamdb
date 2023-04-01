@@ -11,14 +11,21 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'username',
-                  'bio', 'email', 'role']
+                  'bio', 'email', 'role',]
 
 
-class CreatUserSerializer(serializers.Serializer):
+class CreateUserSerializer(serializers.Serializer):
     """Создадим сериалайзер для регистрации пользователей"""
 
-    email = serializers.EmailField(required=True)
-    username = serializers.CharField(required=True)
+    email = serializers.EmailField(
+        required=True,
+        max_length=254,
+    )
+    username = serializers.RegexField(
+        required=True,
+        max_length=150,
+        regex=r'^[\w.@+-]+\Z',
+    )
 
     def validate(self, data):
         """Проверим указанное имя пользователя"""
