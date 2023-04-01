@@ -50,7 +50,7 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug',
         required=True
     )
-    rating = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Title
@@ -66,15 +66,20 @@ class TitleViewSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения заголовков"""
     genre = GenreSerializer(many=True, required=True)
     category = CategorySerializer(many=False, read_only=True)
+    rating = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'description', 'genre', 'category',
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
         )
+
+    def get_rating(self, obj):
+        return obj.calc_rating()
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор отзывов"""
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True
@@ -107,6 +112,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор комментариев к отзывам"""
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
