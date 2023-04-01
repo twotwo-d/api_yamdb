@@ -66,12 +66,16 @@ class TitleViewSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения заголовков"""
     genre = GenreSerializer(many=True, required=True)
     category = CategorySerializer(many=False, read_only=True)
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'description', 'genre', 'category',
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
         )
+
+    def get_rating(self, obj):
+        return obj.calc_rating()
 
 
 class ReviewSerializer(serializers.ModelSerializer):
