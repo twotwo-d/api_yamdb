@@ -4,14 +4,13 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .serializers import (AccessTokenSerializer, CreatUserSerializer,
+from .serializers import (AccessTokenSerializer, CreateUserSerializer,
                           UserSerializer)
 
 
@@ -26,7 +25,7 @@ class UserViewSet(viewsets.ModelViewSet):
     http_method_names = ['post', 'patch', 'get', 'delete',]
 
     @action(
-            methods=['patch', 'get'],
+            methods=['get', 'patch',],
             detail=False,
             permission_classes=[permissions.IsAuthenticated],
     )
@@ -43,34 +42,36 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(['POST',])
 @permission_classes([AllowAny])
 def signup(request):
     """Создадим функцию для регистрации пользователей"""
 
-    serializer = CreatUserSerializer(data=request.data)
+    serializer = CreateUserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    username = serializer.validated_data['username']
-    email = serializer.validated_data['email']
-    if (
-        User.objects.filter(email=email).exists()
-        or User.objects.filter(username=username).exists()
-    ):
-        raise ValidationError(
-            'Пользователь с таким e-mail или username уже существует'
-        )
+    username = serializer.validated_data.get('username')
+    email = serializer.validated_data.get('email')
     user, code_created = User.objects.get_or_create(
-        email=email, username=username)
+        email=email,
+        username=username
+    )
+    if (
+        not User.objects.filter(email=email).exists()
+        and User.objects.filter(username=username).exists()
+    ) or (
+        User.objects.filter(email=email).exists()
+        and not User.objects.filter(username=username).exists()
+    ):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
     confirmation_code = default_token_generator.make_token(user)
     user.confirmation_code = confirmation_code
-    user.save()
     send_mail(
         'Confirmation code',
         f'Ваш код подтверждения {confirmation_code}',
         settings.SENDING_EMAIL,
         [email],
         fail_silently=False
-    )
+    ) 
     return Response(
         serializer.data,
         status=status.HTTP_200_OK
@@ -85,11 +86,13 @@ def get_jwt_token(request):
     serializer = AccessTokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data.get('username')
+    email = serializer.validated_data.get('email')
     confirmation_code = serializer.validated_data.get('confirmation_code')
 
     try:
         user = User.objects.get(
             username=username,
+            email=email,
             confirmation_code=confirmation_code,
         )
     except User.DoesNotExist:

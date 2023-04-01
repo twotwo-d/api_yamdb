@@ -19,17 +19,6 @@ ROLE_CHOICES = [
 class User(AbstractUser):
     """Создали модель Пользователь и указали роли в ROLE_CHOICES"""
 
-    username = models.TextField(
-        verbose_name='Имя пользователя',
-        unique=True,
-        max_length=150,
-    )
-    email = models.EmailField(
-        verbose_name='Электронная почта',
-        max_length=254,
-        blank=True,
-        unique=True,
-    )
     bio = models.TextField(
         verbose_name='Биография',
         blank=True,
