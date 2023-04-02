@@ -19,6 +19,9 @@ ROLE_CHOICES = [
 class User(AbstractUser):
     """Создали модель Пользователь и указали роли в ROLE_CHOICES"""
 
+    email = models.EmailField(
+        unique=True,
+    )
     bio = models.TextField(
         verbose_name='Биография',
         blank=True,
@@ -61,6 +64,12 @@ class Meta:
     verbose_name_plural = 'Пользователи'
     verbose_name = 'Пользователь'
     ordering = ('username',)
+    constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'],
+                name='unique_fields'
+            )
+        ]
 
     def __str__(self):
         return self.username
