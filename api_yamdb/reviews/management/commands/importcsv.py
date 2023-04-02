@@ -1,8 +1,7 @@
-from django.core.management.base import BaseCommand
 import pandas as pd
-
-from reviews.models import (
-    Category, Comment, Genre, GenreToTitle, Review, Title, User)
+from django.core.management.base import BaseCommand
+from reviews.models import (Category, Comment, Genre, GenreToTitle, Review,
+                            Title, User)
 
 
 class Command(BaseCommand):

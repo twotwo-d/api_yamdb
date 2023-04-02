@@ -4,6 +4,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
@@ -21,8 +23,10 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [IsAdminUser]
     lookup_field = 'username'
-    seach_fields = ['username']
+    search_fields = ['username']
+    filter_backends = [SearchFilter]
     http_method_names = ['post', 'patch', 'get', 'delete',]
+    pagination_class = LimitOffsetPagination
 
     @action(
             methods=['get', 'patch',],
@@ -51,18 +55,35 @@ def signup(request):
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data.get('username')
     email = serializer.validated_data.get('email')
+    user_exists = (
+        User.objects.filter(email=email).exists()
+        or User.objects.filter(username=username).exists()
+    )
+    if user_exists:
+        if (
+            User.objects.filter(email=email).exists()
+            and not User.objects.filter(username=username).exists()
+        ):
+            return Response(
+                {'message': 'Пользователь с таким email уже существует'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        elif (
+            not User.objects.filter(email=email).exists()
+            and User.objects.filter(username=username).exists()
+        ):
+            return Response(
+                {'message': 'Пользователь с таким username уже существует'},
+                status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(
+                {'message': 'Пользователь уже зарегистрирован'},
+                status=status.HTTP_200_OK
+            )
     user, code_created = User.objects.get_or_create(
         email=email,
         username=username
     )
-    if (
-        not User.objects.filter(email=email).exists()
-        and User.objects.filter(username=username).exists()
-    ) or (
-        User.objects.filter(email=email).exists()
-        and not User.objects.filter(username=username).exists()
-    ):
-        return Response(status=status.HTTP_400_BAD_REQUEST)
     confirmation_code = default_token_generator.make_token(user)
     user.confirmation_code = confirmation_code
     send_mail(
@@ -71,7 +92,7 @@ def signup(request):
         settings.SENDING_EMAIL,
         [email],
         fail_silently=False
-    ) 
+    )
     return Response(
         serializer.data,
         status=status.HTTP_200_OK
@@ -86,13 +107,10 @@ def get_jwt_token(request):
     serializer = AccessTokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data.get('username')
-    email = serializer.validated_data.get('email')
     confirmation_code = serializer.validated_data.get('confirmation_code')
-
     try:
         user = User.objects.get(
             username=username,
-            email=email,
             confirmation_code=confirmation_code,
         )
     except User.DoesNotExist:
@@ -100,7 +118,6 @@ def get_jwt_token(request):
             {'message': 'Ваш токен не прошёл проверку'},
             status=status.HTTP_400_BAD_REQUEST
         )
-
     user.confirmation_code = ''
     user.save()
     try:
@@ -110,7 +127,6 @@ def get_jwt_token(request):
             {'message': f'Ошибка при создании токена: {e}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
     return Response(
         {'token': f'{jwt_token.access_token}'},
         status=status.HTTP_200_OK
