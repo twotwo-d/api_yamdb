@@ -25,13 +25,13 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     search_fields = ['username']
     filter_backends = [SearchFilter]
-    http_method_names = ['post', 'patch', 'get', 'delete',]
+    http_method_names = ['post', 'patch', 'get', 'delete', ]
     pagination_class = LimitOffsetPagination
 
     @action(
-            methods=['get', 'patch',],
-            detail=False,
-            permission_classes=[permissions.IsAuthenticated],
+        methods=['get', 'patch', ],
+        detail=False,
+        permission_classes=[permissions.IsAuthenticated],
     )
     def me(self, request):
         """Создадим функцию для получения данных собственной учётной записи"""
@@ -46,7 +46,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST',])
+@api_view(['POST', ])
 @permission_classes([AllowAny])
 def signup(request):
     """Создадим функцию для регистрации пользователей"""

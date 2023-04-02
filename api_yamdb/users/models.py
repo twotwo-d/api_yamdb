@@ -9,10 +9,10 @@ MODERATOR = 'moderator'
 ADMIN = 'admin'
 
 ROLE_CHOICES = [
-        (ANONYM, 'anonym'),
-        (USER, 'user'),
-        (MODERATOR, 'moderator'),
-        (ADMIN, 'admin'),
+    (ANONYM, 'anonym'),
+    (USER, 'user'),
+    (MODERATOR, 'moderator'),
+    (ADMIN, 'admin'),
 ]
 
 
@@ -65,11 +65,11 @@ class Meta:
     verbose_name = 'Пользователь'
     ordering = ('username',)
     constraints = [
-            models.UniqueConstraint(
-                fields=['username', 'email'],
-                name='unique_fields'
-            )
-        ]
+        models.UniqueConstraint(
+            fields=['username', 'email'],
+            name='unique_fields'
+        )
+    ]
 
     def __str__(self):
         return self.username
