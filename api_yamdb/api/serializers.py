@@ -49,32 +49,25 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug',
         required=True
     )
-    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+            'id', 'name', 'year', 'description', 'genre', 'category'
         )
-
-    def get_rating(self, obj):
-        return obj.calc_rating()
 
 
 class TitleViewSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения заголовков"""
     genre = GenreSerializer(many=True, required=True)
     category = CategorySerializer(many=False, read_only=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
         )
-
-    def get_rating(self, obj):
-        return obj.calc_rating()
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -88,7 +81,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'text', 'score', 'pub_date')
 
     def validate_score(self, value):
-        if 0 > value > 10:
+        if not 1 <= value <= 10:
             raise serializers.ValidationError(
                 'Оценка должна быть в диапазоне от 1 до 10'
             )
