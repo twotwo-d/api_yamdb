@@ -2,14 +2,22 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 from rest_framework.pagination import LimitOffsetPagination
-from reviews.models import Category, Genre, Review, Title
+from django.db.models import Avg
 
+from reviews.models import Category, Genre, Review, Title
 from .filters import TitleFilter
-from .permissions import (IsAdminModeratorAuthorOrReadOnly,
-                          IsAdminUserOrReadOnly)
-from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ReviewSerializer, TitleSerializer,
-                          TitleViewSerializer)
+from .permissions import (
+    IsAdminModeratorAuthorOrReadOnly,
+    IsAdminUserOrReadOnly,
+)
+from .serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    GenreSerializer,
+    ReviewSerializer,
+    TitleSerializer,
+    TitleViewSerializer,
+)
 
 
 class CreateDeleteListViewSet(mixins.CreateModelMixin,
@@ -42,7 +50,7 @@ class GenreViewSet(CreateDeleteListViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Получить список произведений"""
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     permission_classes = (IsAdminUserOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
