@@ -1,8 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-"""Согласно ТЗ опишем возможные роли пользователей"""
-
 ANONYM = 'anonym'
 USER = 'user'
 MODERATOR = 'moderator'
@@ -17,7 +15,7 @@ ROLE_CHOICES = [
 
 
 class User(AbstractUser):
-    """Создали модель Пользователь и указали роли в ROLE_CHOICES"""
+    """Создадим модель Пользователь"""
 
     email = models.EmailField(
         unique=True,
@@ -59,17 +57,16 @@ class User(AbstractUser):
         """Проверим наличие прав у модератора"""
         return self.role == MODERATOR
 
+    class Meta:
+        verbose_name_plural = 'Пользователи'
+        verbose_name = 'Пользователь'
+        ordering = ('username',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'],
+                name='unique_fields'
+            )
+        ]
 
-class Meta:
-    verbose_name_plural = 'Пользователи'
-    verbose_name = 'Пользователь'
-    ordering = ('username',)
-    constraints = [
-        models.UniqueConstraint(
-            fields=['username', 'email'],
-            name='unique_fields'
-        )
-    ]
-
-    def __str__(self):
-        return self.username
+        def __str__(self):
+            return self.username
