@@ -2,8 +2,10 @@ import re
 
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
+
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+from rest_framework.validators import UniqueValidator
+
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
@@ -156,14 +158,6 @@ class CreateUserSerializer(serializers.Serializer):
         regex=r'^[\w.@+-]+\Z',
     )
 
-    # class Meta:
-    #    validators = [
-    #        UniqueTogetherValidator(
-    #            queryset=User.objects.all(),
-    #            fields=['username', 'email'],
-    #        )
-    #    ]
-
     def validate_username(self, value):
         """Проверим указанное имя пользователя"""
 
@@ -210,12 +204,18 @@ class AccessTokenSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
-    def validate(self, data):  # def validate_confirmation_code(self, data):
+    def validate_confirmation_code(self, value):
         """Проверим код подтверждения"""
 
-        user = get_object_or_404(User, username=data['username'])
+        username = self.initial_data.get('username')
+        if not username:
+            raise serializers.ValidationError(
+                {'username': 'Поле является обязательным для этого запроса'}
+            )
+
+        user = get_object_or_404(User, username=username)
         if not default_token_generator.check_token(user,
-                                                   data['confirmation_code']):
+                                                   value):
             raise serializers.ValidationError(
                 {'confirmation_code': 'Ошибка при вводе кода подтверждения'})
-        return data
+        return value
