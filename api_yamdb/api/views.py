@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from reviews.models import Category, Genre, Review, Title
 from .filters import TitleFilter
 from .permissions import IsAdminModeratorAuthorOrReadOnly, IsAdminUserOrReadOnly
 from .serializers import (AccessTokenSerializer, CategorySerializer,
@@ -21,6 +23,7 @@ from .serializers import (AccessTokenSerializer, CategorySerializer,
                           TitleViewSerializer, UserSerializer,)
 from api.permissions import IsAdminUser
 from reviews.models import Category, Genre, Review, Title, User
+
 
 
 class CreateDeleteListViewSet(mixins.CreateModelMixin,
@@ -53,7 +56,7 @@ class GenreViewSet(CreateDeleteListViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Получить список произведений"""
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     permission_classes = (IsAdminUserOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter

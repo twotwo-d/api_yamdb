@@ -84,9 +84,6 @@ class Title(models.Model):
         help_text='Добавьте категорию произведения'
     )
 
-    def calc_rating(self):
-        return self.reviews.aggregate(rating=Avg('score'))['rating']
-
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
@@ -123,7 +120,7 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='Автор отзыва',
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         verbose_name='Оценка произведения',
         validators=[
             MaxValueValidator(10, message='Оценка не может быть больше 10.'),
