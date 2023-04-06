@@ -1,6 +1,12 @@
+import re
+
+from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from reviews.models import Category, Comment, Genre, Review, Title
+
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -115,3 +121,94 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Создадим сериалайзер для класса пользователь"""
+
+    class Meta:
+        model = User
+        fields = [
+            'first_name',
+            'last_name',
+            'username',
+            'bio',
+            'email',
+            'role',
+        ]
+
+
+class CreateUserSerializer(serializers.Serializer):
+    """Создадим сериалайзер для регистрации пользователей"""
+
+    email = serializers.EmailField(
+        required=True,
+        max_length=254,
+    )
+    username = serializers.RegexField(
+        required=True,
+        max_length=150,
+        regex=r'^[\w.@+-]+\Z',
+    )
+
+    def validate_username(self, value):
+        """Проверим указанное имя пользователя"""
+
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                {'Выберете другое имя пользователя'})
+        return value
+
+    def validate_regex_in_username(self, value):
+        """Проверим username на недопустимые символы"""
+
+        regex = r'^[\w.@+-]+\Z'
+        if not re.match(regex, value.username):
+            raise serializers.ValidationError(
+                {'Используются недопустимые символы: ^[\w.@+-]+\Z '}
+            )
+        return value
+
+    def validate(self, data):
+        """Проверим, существует ли пользователь с таким же email"""
+
+        username = data.get('username')
+        email = data.get('email')
+        if (
+            User.objects.filter(username=username).exists()
+            and User.objects.get(username=username).email != email
+        ):
+            raise serializers.ValidationError(
+                'Пользователь с таким username уже существует'
+            )
+        if (
+            User.objects.filter(email=email).exists()
+            and User.objects.get(email=email).username != username
+        ):
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует'
+            )
+        return data
+
+
+class AccessTokenSerializer(serializers.Serializer):
+    """Создадим сериалайзер для получения JWT-токена"""
+
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
+
+    def validate_confirmation_code(self, value):
+        """Проверим код подтверждения"""
+
+        username = self.initial_data.get('username')
+        if not username:
+            raise serializers.ValidationError(
+                {'username': 'Поле является обязательным для этого запроса'}
+            )
+
+        user = get_object_or_404(User, username=username)
+        if not default_token_generator.check_token(user,
+                                                   value):
+            raise serializers.ValidationError(
+                {'confirmation_code': 'Ошибка при вводе кода подтверждения'})
+        return value

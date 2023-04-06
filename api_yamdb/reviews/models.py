@@ -1,8 +1,9 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from users.models import User
+from django.db.models import Avg
 
 from .validators import year_validator
+from users.models import User
 
 
 class Genre(models.Model):

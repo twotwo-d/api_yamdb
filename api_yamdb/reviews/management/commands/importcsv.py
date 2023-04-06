@@ -1,8 +1,11 @@
 from csv import DictReader
 
 from django.core.management.base import BaseCommand
+
+import pandas as pd
+
 from reviews.models import (Category, Comment, Genre, GenreToTitle, Review,
-                            Title, User)
+                            Title, User,)
 
 MODEL_TO_CSV = {
     User: 'static/data/users.csv',
