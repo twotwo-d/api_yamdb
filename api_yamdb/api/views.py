@@ -15,11 +15,12 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .filters import TitleFilter
-from .permissions import IsAdminModeratorAuthorOrReadOnly, IsAdminUserOrReadOnly
+from .permissions import (IsAdminModeratorAuthorOrReadOnly,
+                          IsAdminUserOrReadOnly)
 from .serializers import (AccessTokenSerializer, CategorySerializer,
                           CommentSerializer, CreateUserSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer,
-                          TitleViewSerializer, UserSerializer,)
+                          TitleViewSerializer, UserSerializer)
 from api.permissions import IsAdminUser
 from reviews.models import Category, Genre, Review, Title, User
 

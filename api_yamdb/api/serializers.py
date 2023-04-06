@@ -165,7 +165,7 @@ class CreateUserSerializer(serializers.Serializer):
         regex = r'^[\w.@+-]+\Z'
         if not re.match(regex, value.username):
             raise serializers.ValidationError(
-                {'Используются недопустимые символы: ^[\w.@+-]+\Z '}
+                {r'Используются недопустимые символы: ^[\w.@+-]+\Z '}
             )
         return value
 
