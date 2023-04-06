@@ -21,7 +21,7 @@ class IsAdminUserOrReadOnly(BasePermission):
 
 class IsAdminModeratorAuthorOrReadOnly(BasePermission):
     """Создадим разрешение для пользователей с правами администратора,
-    модератора, автоа или только на чтение контента"""
+    модератора, автора или только на чтение контента"""
 
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:

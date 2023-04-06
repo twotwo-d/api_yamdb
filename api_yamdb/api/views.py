@@ -14,7 +14,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Category, Genre, Review, Title
 from .filters import TitleFilter
 from .permissions import IsAdminModeratorAuthorOrReadOnly, IsAdminUserOrReadOnly
 from .serializers import (AccessTokenSerializer, CategorySerializer,
@@ -23,7 +22,6 @@ from .serializers import (AccessTokenSerializer, CategorySerializer,
                           TitleViewSerializer, UserSerializer,)
 from api.permissions import IsAdminUser
 from reviews.models import Category, Genre, Review, Title, User
-
 
 
 class CreateDeleteListViewSet(mixins.CreateModelMixin,
