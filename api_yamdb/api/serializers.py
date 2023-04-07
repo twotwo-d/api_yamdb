@@ -1,5 +1,3 @@
-import re
-
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 
@@ -157,16 +155,6 @@ class CreateUserSerializer(serializers.Serializer):
         if value.lower() == 'me':
             raise serializers.ValidationError(
                 {'Выберете другое имя пользователя'})
-        return value
-
-    def validate_regex_in_username(self, value):
-        """Проверим username на недопустимые символы"""
-
-        regex = r'^[\w.@+-]+\Z'
-        if not re.match(regex, value.username):
-            raise serializers.ValidationError(
-                {r'Используются недопустимые символы: ^[\w.@+-]+\Z '}
-            )
         return value
 
     def validate(self, data):
